@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load book_extras %}
+{% block title %}My Borrowed Books — E-Library{% endblock %}
+
+{% block extra_css %}
+<style>
+  .borrow-hero {
+    background: linear-gradient(135deg, #1a237e 0%, #283593 60%, #0d47a1 100%);
+    color: #fff;
+    padding: 2.5rem 0 2rem;
+  }
+  .book-card {
+    border-radius: 14px; border: none;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .book-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,.12); }
+  .days-badge-ok   { background: #d1e7dd; color: #0f5132; }
+  .days-badge-warn { background: #fff3cd; color: #856404; }
+  .days-badge-late { background: #f8d7da; color: #842029; }
+  .progress-bar-ok   { background: #198754; }
+  .progress-bar-warn { background: #ffc107; }
+  .progress-bar-late { background: #dc3545; }
+  .btn-return {
+    background: linear-gradient(135deg, #b71c1c, #e53935);
+    color: #fff; border: none; border-radius: 8px;
+    font-size: .82rem; font-weight: 600;
+    padding: .45rem 1.1rem;
+    transition: opacity .2s;
+  }
+  .btn-return:hover { opacity: .88; color: #fff; }
+</style>
+{% endblock %}
+
+{% block pre_content %}
+<div class="borrow-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb mb-0" style="--bs-breadcrumb-divider-color:rgba(255,255,255,.5);">
+        <li class="breadcrumb-item">
+          <a href="{% url 'home' %}" style="color:rgba(255,255,255,.75);text-decoration:none;">Home</a>
+        </li>
+        <li class="breadcrumb-item active" style="color:rgba(255,255,255,.9);">My Borrowed Books</li>
+      </ol>
+    </nav>
+    <div class="d-flex align-items-center gap-3">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.6rem;">
+        <i class="bi bi-book-fill"></i>
+      </div>
+      <div>
+        <h1 style="font-size:1.8rem;font-weight:800;margin-bottom:.3rem;">My Borrowed Books</h1>
+        <div class="d-flex gap-3" style="font-size:.85rem;opacity:.85;">
+          <span><i class="bi bi-book me-1"></i>{{ active|length }} / {{ max_limit }} active</span>
+          {% if active|length >= max_limit %}
+          <span style="background:rgba(220,53,69,.3);border-radius:20px;padding:2px 10px;">
+            <i class="bi bi-exclamation-triangle me-1"></i>Limit reached
+          </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if active %}
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+  {% for record in active %}
+  {% with days=record.days_remaining %}
+  <div class="col">
+    <div class="card book-card shadow-sm h-100">
+
+      <div class="d-flex gap-0" style="min-height:0;">
+        <a href="{% url 'book_detail' record.book.pk %}" style="flex-shrink:0;">
+          {% if record.book.cover_image %}
+          <img src="{{ record.book.cover_image.url }}" alt="{{ record.book.title }}"
+               style="width:90px;height:130px;object-fit:cover;border-radius:14px 0 0 0;">
+          {% else %}
+          <div style="width:90px;height:130px;background:linear-gradient(135deg,#e3f2fd,#bbdefb);display:flex;align-items:center;justify-content:center;border-radius:14px 0 0 0;">
+            <i class="bi bi-book" style="font-size:2rem;color:#90b4e8;opacity:.6;"></i>
+          </div>
+          {% endif %}
+        </a>
+
+        <div class="p-3 flex-grow-1 d-flex flex-column min-w-0">
+          <a href="{% url 'book_detail' record.book.pk %}" class="text-decoration-none text-dark fw-bold"
+             style="font-size:.9rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+            {{ record.book.title }}
+          </a>
+          {% if record.book.author %}
+          <p class="text-muted mb-2" style="font-size:.78rem;">{{ record.book.author.name }}</p>
+          {% endif %}
+
+          <div class="mt-auto">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted" style="font-size:.75rem;">Return by</span>
+              <span class="fw-semibold" style="font-size:.78rem;">{{ record.due_date|date:"M d, Y" }}</span>
+            </div>
+
+            {% if days < 0 %}
+            <span class="badge days-badge-late w-100 text-center py-1 mb-2" style="border-radius:8px;font-size:.75rem;">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i>Late by {{ days|abs }} day{{ days|abs|pluralize }}
+            </span>
+            {% elif days <= 3 %}
+            <span class="badge days-badge-warn w-100 text-center py-1 mb-2" style="border-radius:8px;font-size:.75rem;">
+              <i class="bi bi-clock me-1"></i>{{ days }} day{{ days|pluralize }} remaining
+            </span>
+            {% else %}
+            <span class="badge days-badge-ok w-100 text-center py-1 mb-2" style="border-radius:8px;font-size:.75rem;">
+              <i class="bi bi-check-circle me-1"></i>{{ days }} day{{ days|pluralize }} remaining
+            </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#f8f9ff;padding:.5rem .8rem;border-top:1px solid #f0f0f0;">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="text-muted" style="font-size:.72rem;">
+            <i class="bi bi-calendar3 me-1"></i>Borrowed {{ record.borrow_date|date:"M d" }}
+          </span>
+          {% if days < 0 %}
+          <span class="fw-bold" style="font-size:.75rem;color:#dc3545;">
+            <i class="bi bi-x-circle-fill me-1"></i>Late
+          </span>
+          {% else %}
+          <span class="fw-bold" style="font-size:.75rem;color:#198754;">
+            <i class="bi bi-check-circle-fill me-1"></i>On Time
+          </span>
+          {% endif %}
+        </div>
+
+        <div class="progress mb-2" style="height:5px;border-radius:4px;">
+          {% if days < 0 %}
+          <div class="progress-bar progress-bar-late" style="width:100%;"></div>
+          {% elif days <= 3 %}
+          <div class="progress-bar progress-bar-warn" style="width:{{ days|widthpct:14 }}%;"></div>
+          {% else %}
+          <div class="progress-bar progress-bar-ok" style="width:{{ days|widthpct:14 }}%;"></div>
+          {% endif %}
+        </div>
+
+        <form method="post" action="{% url 'return_book' record.pk %}" class="d-grid">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-return"
+                  onclick="return confirm('Return \'{{ record.book.title|escapejs }}\'?')">
+            <i class="bi bi-arrow-return-left me-1"></i>Return Book
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+  {% endwith %}
+  {% endfor %}
+</div>
+
+<div class="mt-4">
+  <a href="{% url 'my_borrowings' %}" class="btn btn-outline-primary btn-sm" style="border-radius:8px;">
+    <i class="bi bi-clock-history me-1"></i>View Full Borrowing History
+  </a>
+</div>
+
+{% else %}
+<div class="text-center text-muted py-5 bg-white rounded-3 border" style="border-style:dashed!important;">
+  <i class="bi bi-book" style="font-size:3rem;opacity:.3;"></i>
+  <p class="mt-2 mb-1 fw-semibold">No active borrowings</p>
+  <p class="small mb-3">You haven't borrowed any books yet. Browse the library and start reading!</p>
+  <a href="{% url 'book_list' %}" class="btn btn-primary btn-sm" style="border-radius:8px;">
+    <i class="bi bi-journals me-1"></i>Browse Books
+  </a>
+</div>
+{% endif %}
+{% endblock %}

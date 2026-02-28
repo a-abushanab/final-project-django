@@ -1,0 +1,104 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | E-Library Admin{% endblock %}
+
+{% block branding %}
+<div id="site-name" style="display:flex;align-items:center;gap:10px;">
+  <a href="{% url 'admin:index' %}" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+    <div style="
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    ">&#128218;</div>
+    <div style="line-height:1.1;">
+      <div style="font-size:1.05rem;font-weight:800;color:#fff;letter-spacing:.3px;">
+        E-Library
+      </div>
+      <div style="font-size:.65rem;color:rgba(255,255,255,.65);font-weight:400;text-transform:uppercase;letter-spacing:1px;">
+        Administration
+      </div>
+    </div>
+  </a>
+</div>
+{% endblock %}
+
+{% block nav-global %}
+<style>
+  /* Header bar */
+  #header {
+    background: linear-gradient(135deg, #1a237e 0%, #283593 60%, #0d47a1 100%) !important;
+    padding: 10px 20px;
+  }
+  #header a:link, #header a:visited { color: rgba(255,255,255,.9); }
+  #header a:hover { color: #fff; }
+
+  /* User tools */
+  #user-tools a { color: rgba(255,255,255,.8); }
+  #user-tools a:hover { color: #fff; text-decoration:underline; }
+
+  /* Breadcrumbs */
+  div.breadcrumbs {
+    background: #e8eaf6;
+    border-bottom: 1px solid #c5cae9;
+    color: #1a237e;
+    padding: 8px 20px;
+    font-size: .85rem;
+  }
+  div.breadcrumbs a { color: #3949ab; }
+  div.breadcrumbs a:hover { color: #1a237e; }
+
+  /* Module headers */
+  .module caption, .module h2, .inline-group h2 {
+    background: linear-gradient(135deg, #1a237e, #3949ab) !important;
+    color: #fff !important;
+    border-radius: 4px 4px 0 0;
+    padding: 8px 12px !important;
+    font-size: .85rem !important;
+    letter-spacing: .3px;
+  }
+
+  /* Submit row */
+  .submit-row input[type=submit], .submit-row a.deletelink-box,
+  input[type=submit].default {
+    background: linear-gradient(135deg, #1a237e, #3949ab);
+    border: none;
+    border-radius: 6px;
+  }
+  .submit-row a.deletelink {
+    background: #c62828;
+    border-radius: 6px;
+  }
+
+  /* Buttons */
+  .button, input[type=submit], input[type=button], .submit-row input {
+    border-radius: 6px;
+  }
+
+  /* Action checkboxes */
+  tr.selected { background: #e8eaf6; }
+
+  /* App index icons */
+  .app-books    .section:before { content: "📚 "; }
+  .app-accounts .section:before { content: "👤 "; }
+  .app-borrowing .section:before { content: "📖 "; }
+  .app-reviews  .section:before { content: "⭐ "; }
+
+  /* Dashboard columns */
+  #content-main .module { border-radius: 8px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.07); }
+
+  /* Changelist table */
+  #result_list thead th { background: #e8eaf6; color: #1a237e; font-weight:700; }
+  #result_list tbody tr:hover { background: #f5f5ff; }
+
+  /* Sidebar filters */
+  #changelist-filter h2 {
+    background: linear-gradient(135deg, #1a237e, #3949ab) !important;
+    color: #fff !important;
+    font-size: .8rem !important;
+    padding: 8px 12px !important;
+  }
+  #changelist-filter h3 { color: #1a237e; font-size: .8rem; font-weight:700; }
+  #changelist-filter li.selected a { color: #1a237e; font-weight:700; }
+</style>
+{% endblock %}

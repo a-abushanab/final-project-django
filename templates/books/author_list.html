@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Authors — E-Library{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="fw-bold"><i class="bi bi-person-lines-fill me-2 text-primary"></i>Authors</h3>
+  <a href="{% url 'author_create' %}" class="btn btn-success">
+    <i class="bi bi-plus-circle me-1"></i>Add Author
+  </a>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+  {% for author in authors %}
+  <div class="col">
+    <div class="card h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <h5 class="fw-bold">{{ author.name }}</h5>
+        <p class="text-muted small">{{ author.bio|truncatechars:100 }}</p>
+        <span class="badge bg-secondary">{{ author.books.count }} book{{ author.books.count|pluralize }}</span>
+      </div>
+      <div class="card-footer bg-white border-0">
+        <a href="{% url 'author_edit' author.pk %}" class="btn btn-sm btn-outline-warning me-1">
+          <i class="bi bi-pencil"></i> Edit
+        </a>
+        <a href="{% url 'author_delete' author.pk %}" class="btn btn-sm btn-outline-danger">
+          <i class="bi bi-trash"></i> Delete
+        </a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center text-muted py-5">
+    <i class="bi bi-person-x display-4"></i>
+    <p class="mt-2">No authors yet. <a href="{% url 'author_create' %}">Add one!</a></p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Delete Book — E-Library{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm border-0 border-top border-danger border-3">
+      <div class="card-body p-4 text-center">
+        <i class="bi bi-exclamation-triangle-fill text-danger display-4"></i>
+        <h4 class="fw-bold mt-3">Delete Book</h4>
+        <p class="text-muted">Are you sure you want to delete <strong>"{{ book.title }}"</strong>?<br>This action cannot be undone.</p>
+        <form method="post" class="d-flex gap-2 justify-content-center mt-3">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-2"></i>Yes, Delete</button>
+          <a href="{% url 'book_detail' book.pk %}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

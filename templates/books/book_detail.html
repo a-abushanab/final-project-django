@@ -1,0 +1,493 @@
+{% extends 'base.html' %}
+{% load book_extras %}
+{% block title %}{{ book.title }} — E-Library{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Hero banner ── */
+  .detail-hero {
+    background: linear-gradient(135deg, #0d2b5e 0%, #1a3a6e 60%, #0d47a1 100%);
+    padding: 2.5rem 0 2rem;
+    color: #fff;
+  }
+
+  /* ── Cover ── */
+  .cover-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 240px;
+    margin: 0 auto;
+  }
+  .cover-img {
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    display: block;
+  }
+  .cover-placeholder {
+    width: 100%; height: 340px;
+    background: linear-gradient(135deg, #1e3a6e, #2a52a8);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+
+  /* ── Rating stars (large) ── */
+  .stars-lg { font-size: 1.3rem; letter-spacing: 2px; }
+  .star-full  { color: #ffc107; }
+  .star-half  { color: #ffc107; }
+  .star-empty { color: rgba(255,255,255,.3); }
+
+  /* ── Info pills ── */
+  .info-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: .85rem;
+  }
+
+  /* ── Copies bar ── */
+  .copies-bar { height: 8px; border-radius: 4px; }
+
+  /* ── Action buttons ── */
+  .btn-borrow {
+    background: #fff; color: #0d47a1; font-weight: 700;
+    border: none; border-radius: 10px; padding: .7rem 1.8rem;
+    font-size: 1rem; transition: transform .15s, box-shadow .15s;
+  }
+  .btn-borrow:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); color: #0d47a1; }
+  .btn-return {
+    background: #fff3cd; color: #856404; font-weight: 700;
+    border: 2px solid #ffc107; border-radius: 10px; padding: .7rem 1.8rem;
+    font-size: 1rem;
+  }
+  .btn-login-borrow {
+    border: 2px solid rgba(255,255,255,.7); color: #fff; background: transparent;
+    border-radius: 10px; padding: .7rem 1.8rem; font-weight: 700; font-size: 1rem;
+    transition: background .15s;
+  }
+  .btn-login-borrow:hover { background: rgba(255,255,255,.15); color: #fff; }
+  .reserved-box {
+    background: rgba(255,193,7,.15);
+    border: 1px solid rgba(255,193,7,.4);
+    border-radius: 10px; padding: .8rem 1.2rem;
+    color: #fff;
+  }
+
+  /* ── Detail body ── */
+  .detail-body { background: #f8f9fa; }
+  .detail-card {
+    background: #fff; border-radius: 14px;
+    border: 1px solid #e3e8f0;
+    padding: 1.75rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,.05);
+  }
+  .section-label {
+    font-size: .72rem; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: #6c757d; margin-bottom: .4rem;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+  .meta-item { display: flex; flex-direction: column; }
+  .meta-value { font-size: 1rem; font-weight: 700; color: #212529; }
+
+  /* ── Reviews ── */
+  .review-card {
+    background: #fff; border-radius: 12px;
+    border: 1px solid #e3e8f0;
+    padding: 1.2rem;
+    transition: box-shadow .2s;
+  }
+  .review-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+  .review-card.own-review { border-left: 4px solid #0d6efd; background: #f0f4ff; }
+  .avatar-circle {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.1rem; color: #fff;
+    flex-shrink: 0;
+  }
+  .stars-review { color: #ffc107; font-size: .9rem; letter-spacing: 1px; }
+  .star-empty-review { color: #dee2e6; }
+
+  /* ── Write review CTA ── */
+  .write-review-cta {
+    background: linear-gradient(135deg, #f0f4ff, #e9f0ff);
+    border: 2px dashed #a8c0f0;
+    border-radius: 14px;
+    padding: 1.5rem;
+    text-align: center;
+  }
+</style>
+{% endblock %}
+
+
+{% block pre_content %}
+<!-- ═══ HERO BANNER ═══ -->
+<div class="detail-hero">
+  <div class="container">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb mb-0" style="--bs-breadcrumb-divider-color:rgba(255,255,255,.5);">
+        <li class="breadcrumb-item">
+          <a href="{% url 'book_list' %}" style="color:rgba(255,255,255,.75);text-decoration:none;">
+            <i class="bi bi-journals me-1"></i>Books
+          </a>
+        </li>
+        <li class="breadcrumb-item active" style="color:rgba(255,255,255,.9);">{{ book.title|truncatechars:40 }}</li>
+      </ol>
+    </nav>
+
+    <div class="row g-4 align-items-start">
+
+      <!-- Cover column -->
+      <div class="col-md-3 col-lg-2">
+        <div class="cover-wrapper">
+          {% if book.cover_image %}
+          <img src="{{ book.cover_image.url }}" class="cover-img" alt="{{ book.title }}">
+          {% else %}
+          <div class="cover-placeholder">
+            <i class="bi bi-book" style="font-size:5rem;color:rgba(255,255,255,.4);"></i>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Info column -->
+      <div class="col-md-9 col-lg-10">
+
+        <!-- Category badge -->
+        {% if book.category %}
+        <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.82rem;font-weight:600;">
+          <i class="bi bi-tag me-1"></i>{{ book.category }}
+        </span>
+        {% endif %}
+
+        <!-- Title -->
+        <h1 style="font-size:2rem;font-weight:800;line-height:1.2;margin:1rem 0 .4rem;">
+          {{ book.title }}
+        </h1>
+
+        <!-- Author link -->
+        <p style="font-size:1.1rem;opacity:.85;margin-bottom:1rem;">
+          by
+          {% if book.author %}
+          <a href="{% url 'author_detail_public' book.author.pk %}"
+             style="color:#90caf9;font-weight:600;text-decoration:none;">
+            {{ book.author.name }}
+          </a>
+          {% else %}
+          <span>Unknown Author</span>
+          {% endif %}
+        </p>
+
+        <!-- Rating stars -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+          {% if book.avg_rating %}
+          <span class="stars-lg">
+            {% for s in book.avg_rating|star_range %}
+              {% if s == 'full' %}<i class="bi bi-star-fill star-full"></i>
+              {% elif s == 'half' %}<i class="bi bi-star-half star-half"></i>
+              {% else %}<i class="bi bi-star star-empty"></i>
+              {% endif %}
+            {% endfor %}
+          </span>
+          <span style="font-size:1.1rem;font-weight:700;">{{ book.avg_rating|floatformat:1 }}</span>
+          <span style="opacity:.65;font-size:.88rem;">out of 5 &nbsp;&bull;&nbsp; {{ reviews.count }} review{{ reviews.count|pluralize }}</span>
+          {% else %}
+          <span style="opacity:.6;font-size:.95rem;"><i class="bi bi-star me-1"></i>No ratings yet</span>
+          {% endif %}
+        </div>
+
+        <!-- Info pills row -->
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          {% if book.published_date %}
+          <span class="info-pill"><i class="bi bi-calendar3"></i>{{ book.published_date.year }}</span>
+          {% endif %}
+          {% if book.pages %}
+          <span class="info-pill"><i class="bi bi-file-text"></i>{{ book.pages }} pages</span>
+          {% endif %}
+          {% if book.language %}
+          <span class="info-pill"><i class="bi bi-translate"></i>{{ book.language }}</span>
+          {% endif %}
+          {% if book.isbn %}
+          <span class="info-pill"><i class="bi bi-upc-scan"></i>ISBN: {{ book.isbn }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Copies availability -->
+        <div class="mb-4" style="max-width:340px;">
+          <div class="d-flex justify-content-between mb-1" style="font-size:.85rem;opacity:.85;">
+            <span><i class="bi bi-books me-1"></i>Copies available</span>
+            <strong>{{ book.available_copies }} / {{ book.total_copies }}</strong>
+          </div>
+          <div class="progress copies-bar" style="background:rgba(255,255,255,.2);">
+            {% if book.total_copies > 0 %}
+            <div class="progress-bar {% if book.is_available %}bg-success{% else %}bg-danger{% endif %}"
+                 style="width:{% widthratio book.available_copies book.total_copies 100 %}%;"></div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+
+          {% if not user.is_authenticated %}
+          <!-- VISITOR -->
+          <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-login-borrow">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Login to Borrow
+          </a>
+
+          {% elif user.is_staff %}
+          <!-- ADMIN -->
+          <a href="{% url 'book_edit' book.pk %}" class="btn btn-warning fw-bold">
+            <i class="bi bi-pencil me-1"></i>Edit Book
+          </a>
+          <a href="{% url 'book_delete' book.pk %}" class="btn btn-danger fw-bold">
+            <i class="bi bi-trash me-1"></i>Delete
+          </a>
+
+          {% else %}
+          <!-- STUDENT -->
+          {% if user_borrow %}
+            <!-- Currently borrowed by this student -->
+            <div class="reserved-box">
+              <i class="bi bi-bookmark-check-fill me-2 text-warning"></i>
+              <strong>Book Reserved by You</strong>
+              <div style="font-size:.82rem;opacity:.8;margin-top:2px;">
+                Due date: <strong>{{ user_borrow.due_date }}</strong>
+                {% if user_borrow.is_overdue %}<span class="badge bg-danger ms-2">Overdue!</span>{% endif %}
+              </div>
+            </div>
+            <form method="post" action="{% url 'return_book' user_borrow.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-return">
+                <i class="bi bi-arrow-return-left me-2"></i>Return Book
+              </button>
+            </form>
+
+          {% elif book.is_available %}
+            <!-- Available to borrow -->
+            <form method="post" action="{% url 'borrow_book' book.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-borrow">
+                <i class="bi bi-bookmark-plus me-2"></i>Borrow Book
+              </button>
+            </form>
+          {% else %}
+            <!-- No copies left -->
+            <button class="btn btn-secondary fw-bold" disabled>
+              <i class="bi bi-x-circle me-2"></i>All Copies Borrowed
+            </button>
+          {% endif %}
+
+          <!-- Add Review button (if eligible) -->
+          {% if can_review %}
+          <a href="{% url 'add_review' book.pk %}"
+             style="border:2px solid rgba(255,255,255,.6);color:#fff;background:transparent;border-radius:10px;padding:.7rem 1.8rem;font-weight:700;font-size:1rem;text-decoration:none;transition:background .15s;"
+             onmouseover="this.style.background='rgba(255,255,255,.15)'"
+             onmouseout="this.style.background='transparent'">
+            <i class="bi bi-star me-2"></i>Add Review
+          </a>
+          {% endif %}
+          {% endif %}
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block content %}
+<div class="detail-body py-4">
+  <div class="row g-4">
+
+    <!-- LEFT: description + reviews -->
+    <div class="col-lg-8">
+
+      <!-- Description -->
+      {% if book.description %}
+      <div class="detail-card mb-4">
+        <h5 class="fw-bold mb-3"><i class="bi bi-file-text me-2 text-primary"></i>About This Book</h5>
+        <p class="text-muted lh-lg mb-0" style="font-size:.97rem;">{{ book.description|linebreaksbr }}</p>
+      </div>
+      {% endif %}
+
+      <!-- Reviews -->
+      <div class="detail-card">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+          <h5 class="fw-bold mb-0">
+            <i class="bi bi-chat-square-text me-2 text-primary"></i>
+            Reviews
+            {% if reviews.count %}<span class="badge bg-primary ms-1">{{ reviews.count }}</span>{% endif %}
+          </h5>
+          {% if can_review %}
+          <a href="{% url 'add_review' book.pk %}" class="btn btn-primary btn-sm fw-semibold">
+            <i class="bi bi-pencil-square me-1"></i>Write a Review
+          </a>
+          {% endif %}
+        </div>
+
+        <!-- Prompt to borrow if has never borrowed -->
+        {% if user.is_authenticated and not user.is_staff and not has_returned and not user_review %}
+        <div class="write-review-cta mb-4">
+          <i class="bi bi-star" style="font-size:2rem;color:#a8c0f0;"></i>
+          <p class="fw-semibold mt-2 mb-1">Want to leave a review?</p>
+          <p class="text-muted small mb-0">Borrow and return this book to unlock the review feature.</p>
+        </div>
+        {% endif %}
+
+        {% if reviews %}
+        <div class="d-flex flex-column gap-3">
+          {% for review in reviews %}
+          <div class="review-card {% if review.student == user %}own-review{% endif %}">
+            <div class="d-flex gap-3 align-items-start">
+
+              <!-- Avatar -->
+              <div class="avatar-circle" style="background:{{ review.student|avatar_color }};">
+                {{ review.student|avatar_initials }}
+              </div>
+
+              <!-- Content -->
+              <div class="flex-grow-1 min-w-0">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 mb-1">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold" style="font-size:.95rem;">
+                      {{ review.student.get_full_name|default:review.student.username }}
+                    </span>
+                    {% if review.student == user %}
+                    <span class="badge bg-primary" style="font-size:.68rem;">You</span>
+                    {% endif %}
+                  </div>
+                  <small class="text-muted">
+                    <i class="bi bi-clock me-1"></i>{{ review.created_at|date:"M d, Y" }}
+                  </small>
+                </div>
+
+                <!-- Stars -->
+                <div class="mb-2">
+                  {% for i in "12345" %}
+                  {% if forloop.counter <= review.rating %}
+                  <i class="bi bi-star-fill stars-review"></i>
+                  {% else %}
+                  <i class="bi bi-star star-empty-review"></i>
+                  {% endif %}
+                  {% endfor %}
+                  <span class="ms-1 fw-semibold text-muted" style="font-size:.82rem;">{{ review.rating }}/5</span>
+                </div>
+
+                <!-- Comment -->
+                {% if review.comment %}
+                <p class="text-secondary mb-0" style="font-size:.93rem;line-height:1.6;">{{ review.comment }}</p>
+                {% else %}
+                <p class="text-muted fst-italic mb-0" style="font-size:.88rem;">No written comment.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+          <i class="bi bi-chat-square" style="font-size:3rem;opacity:.3;"></i>
+          <p class="mt-2 mb-0">No reviews yet. Be the first to review this book!</p>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- RIGHT: metadata sidebar -->
+    <div class="col-lg-4">
+
+      <!-- Book details card -->
+      <div class="detail-card mb-4">
+        <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-primary"></i>Book Details</h6>
+        <div class="meta-grid">
+          {% if book.published_date %}
+          <div class="meta-item">
+            <span class="section-label">Publication Year</span>
+            <span class="meta-value">{{ book.published_date.year }}</span>
+          </div>
+          {% endif %}
+          {% if book.pages %}
+          <div class="meta-item">
+            <span class="section-label">Pages</span>
+            <span class="meta-value">{{ book.pages }}</span>
+          </div>
+          {% endif %}
+          {% if book.language %}
+          <div class="meta-item">
+            <span class="section-label">Language</span>
+            <span class="meta-value">{{ book.language }}</span>
+          </div>
+          {% endif %}
+          {% if book.category %}
+          <div class="meta-item">
+            <span class="section-label">Category</span>
+            <span class="meta-value">{{ book.category }}</span>
+          </div>
+          {% endif %}
+          {% if book.isbn %}
+          <div class="meta-item">
+            <span class="section-label">ISBN</span>
+            <span class="meta-value" style="font-size:.9rem;">{{ book.isbn }}</span>
+          </div>
+          {% endif %}
+          <div class="meta-item">
+            <span class="section-label">Total Copies</span>
+            <span class="meta-value">{{ book.total_copies }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="section-label">Available</span>
+            <span class="meta-value {% if book.is_available %}text-success{% else %}text-danger{% endif %}">
+              {{ book.available_copies }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Author mini card -->
+      {% if book.author %}
+      <div class="detail-card">
+        <h6 class="fw-bold mb-3"><i class="bi bi-person me-2 text-primary"></i>About the Author</h6>
+        <div class="d-flex gap-3 align-items-start">
+          {% if book.author.photo %}
+          <img src="{{ book.author.photo.url }}"
+               style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex-shrink:0;"
+               alt="{{ book.author.name }}">
+          {% else %}
+          <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#0d47a1,#1565c0);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-person-fill" style="font-size:1.6rem;color:#fff;"></i>
+          </div>
+          {% endif %}
+          <div>
+            <a href="{% url 'author_detail_public' book.author.pk %}"
+               class="fw-bold text-decoration-none text-dark d-block mb-1">
+              {{ book.author.name }}
+            </a>
+            {% if book.author.bio %}
+            <p class="text-muted small mb-2" style="line-height:1.5;">
+              {{ book.author.bio|truncatechars:120 }}
+            </p>
+            {% endif %}
+            <a href="{% url 'author_detail_public' book.author.pk %}" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-arrow-right me-1"></i>View All Books
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

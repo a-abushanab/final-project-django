@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load book_extras %}
+{% block title %}Reviews — E-Library{% endblock %}
+
+{% block extra_css %}
+<style>
+  .review-card {
+    border-radius: 14px;
+    border: 1px solid #e8eaf6;
+    background: #fff;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .review-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  }
+  .star-filled { color: #ffc107; }
+  .star-empty  { color: #dee2e6; }
+</style>
+{% endblock %}
+
+{% block pre_content %}
+<div style="background: linear-gradient(135deg, #1a237e 0%, #283593 60%, #0d47a1 100%); color:#fff; padding: 3rem 0 2.5rem;">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb mb-0" style="--bs-breadcrumb-divider-color:rgba(255,255,255,.5);">
+        <li class="breadcrumb-item">
+          <a href="{% url 'home' %}" style="color:rgba(255,255,255,.75);text-decoration:none;">Home</a>
+        </li>
+        <li class="breadcrumb-item active" style="color:rgba(255,255,255,.9);">Reviews</li>
+      </ol>
+    </nav>
+    <div class="d-flex align-items-center gap-3">
+      <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:2rem;">
+        <i class="bi bi-star-fill"></i>
+      </div>
+      <div>
+        <p style="opacity:.7;font-size:.85rem;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:1px;">Community</p>
+        <h1 style="font-size:2rem;font-weight:800;margin-bottom:.4rem;">Reader Reviews</h1>
+        <span style="background:rgba(255,255,255,.18);border-radius:20px;padding:4px 14px;font-size:.85rem;">
+          <i class="bi bi-chat-left-text me-1"></i>{{ total_count }} review{{ total_count|pluralize }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if reviews %}
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+  {% for review in reviews %}
+  <div class="col">
+    <div class="review-card h-100 shadow-sm p-3 d-flex flex-column">
+
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div style="width:46px;height:46px;border-radius:50%;background:{{ review.student|avatar_color }};
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:1.1rem;font-weight:700;color:#fff;flex-shrink:0;">
+          {{ review.student|avatar_initials }}
+        </div>
+        <div class="flex-grow-1 min-w-0">
+          <p class="fw-semibold mb-0 text-truncate" style="font-size:.9rem;">
+            {{ review.student.get_full_name|default:review.student.username }}
+          </p>
+          <p class="text-muted mb-0" style="font-size:.78rem;">
+            <i class="bi bi-calendar3 me-1"></i>{{ review.created_at|date:"M d, Y" }}
+          </p>
+        </div>
+        <div class="text-end flex-shrink-0">
+          <div style="font-size:.85rem;">
+            {% for s in review.rating|star_range %}
+              {% if s == 'full' %}<i class="bi bi-star-fill star-filled"></i>
+              {% elif s == 'half' %}<i class="bi bi-star-half star-filled"></i>
+              {% else %}<i class="bi bi-star star-empty"></i>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <span class="text-muted" style="font-size:.75rem;">{{ review.rating }}/5</span>
+        </div>
+      </div>
+
+      <a href="{% url 'book_detail' review.book.pk %}"
+         class="d-flex align-items-center gap-2 text-decoration-none mb-3 p-2 rounded"
+         style="background:#f5f7ff;border:1px solid #e8eaf6;">
+        {% if review.book.cover_image %}
+        <img src="{{ review.book.cover_image.url }}" alt="{{ review.book.title }}"
+             style="width:36px;height:50px;object-fit:cover;border-radius:4px;flex-shrink:0;">
+        {% else %}
+        <div style="width:36px;height:50px;background:#c5cae9;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="bi bi-book" style="color:#3949ab;font-size:.9rem;"></i>
+        </div>
+        {% endif %}
+        <div class="min-w-0">
+          <p class="fw-semibold text-dark mb-0 text-truncate" style="font-size:.82rem;">{{ review.book.title }}</p>
+          {% if review.book.author %}
+          <p class="text-muted mb-0 text-truncate" style="font-size:.75rem;">{{ review.book.author.name }}</p>
+          {% endif %}
+        </div>
+        <i class="bi bi-arrow-right text-muted ms-auto flex-shrink-0" style="font-size:.8rem;"></i>
+      </a>
+
+      {% if review.comment %}
+      <p class="text-muted mb-0 flex-grow-1" style="font-size:.88rem;line-height:1.6;
+         display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;">
+        <i class="bi bi-quote" style="color:#c5cae9;font-size:1.1rem;vertical-align:middle;margin-right:2px;"></i>{{ review.comment }}
+      </p>
+      {% else %}
+      <p class="text-muted fst-italic mb-0 flex-grow-1" style="font-size:.85rem;">No comment provided.</p>
+      {% endif %}
+
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if reviews.has_other_pages %}
+<nav class="mt-5 d-flex justify-content-center" aria-label="Reviews pagination">
+  <ul class="pagination">
+    {% if reviews.has_previous %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ reviews.previous_page_number }}">
+        <i class="bi bi-chevron-left"></i>
+      </a>
+    </li>
+    {% else %}
+    <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>
+    {% endif %}
+
+    {% for num in reviews.paginator.page_range %}
+    {% if reviews.number == num %}
+    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+    {% elif num >= reviews.number|add:"-2" and num <= reviews.number|add:"2" %}
+    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+    {% endif %}
+    {% endfor %}
+
+    {% if reviews.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ reviews.next_page_number }}">
+        <i class="bi bi-chevron-right"></i>
+      </a>
+    </li>
+    {% else %}
+    <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center text-muted py-5 bg-white rounded-3 border" style="border-style:dashed!important;">
+  <i class="bi bi-star" style="font-size:3rem;opacity:.3;"></i>
+  <p class="mt-2 mb-1 fw-semibold">No reviews yet</p>
+  <p class="small mb-3">Be the first to review a book after borrowing it.</p>
+  <a href="{% url 'book_list' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-journals me-1"></i>Browse Books
+  </a>
+</div>
+{% endif %}
+{% endblock %}

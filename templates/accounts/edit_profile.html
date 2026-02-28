@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% block title %}Edit Profile — E-Library{% endblock %}
+
+{% block extra_css %}
+<style>
+  .edit-hero {
+    background: linear-gradient(135deg, #1a237e 0%, #283593 60%, #0d47a1 100%);
+    color: #fff;
+    padding: 2.5rem 0 2rem;
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: #3949ab;
+    box-shadow: 0 0 0 .2rem rgba(57,73,171,.2);
+  }
+  .input-group-text { background: #f8f9ff; border-color: #dee2e6; }
+  .section-title {
+    font-size: .72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: #9fa8da; margin-bottom: .8rem; margin-top: 1.4rem;
+  }
+  .section-title:first-child { margin-top: 0; }
+  .btn-save {
+    background: linear-gradient(135deg, #1a237e, #3949ab);
+    color: #fff; border: none; border-radius: 10px;
+    padding: .65rem 2rem; font-weight: 600; font-size: 1rem;
+    transition: opacity .2s, transform .15s;
+  }
+  .btn-save:hover { opacity: .9; transform: translateY(-1px); color: #fff; }
+  .pw-strength { height: 4px; border-radius: 4px; transition: width .3s, background .3s; }
+  .avatar-preview {
+    width: 90px; height: 90px; border-radius: 50%;
+    object-fit: cover; border: 3px solid #e8eaf6;
+  }
+  .avatar-preview-placeholder {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: #e8eaf6; display: flex; align-items: center;
+    justify-content: center; font-size: 2.2rem; color: #9fa8da;
+  }
+</style>
+{% endblock %}
+
+{% block pre_content %}
+<div class="edit-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb mb-0" style="--bs-breadcrumb-divider-color:rgba(255,255,255,.5);">
+        <li class="breadcrumb-item">
+          <a href="{% url 'home' %}" style="color:rgba(255,255,255,.75);text-decoration:none;">Home</a>
+        </li>
+        <li class="breadcrumb-item">
+          <a href="{% url 'profile' %}" style="color:rgba(255,255,255,.75);text-decoration:none;">My Profile</a>
+        </li>
+        <li class="breadcrumb-item active" style="color:rgba(255,255,255,.9);">Edit Profile</li>
+      </ol>
+    </nav>
+    <div class="d-flex align-items-center gap-3">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.6rem;">
+        <i class="bi bi-pencil-square"></i>
+      </div>
+      <div>
+        <h1 style="font-size:1.8rem;font-weight:800;margin-bottom:.2rem;">Edit Profile</h1>
+        <p style="opacity:.75;font-size:.9rem;margin:0;">Update your personal information and password</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-xl-7">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-body p-4 p-md-5">
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+
+          <p class="section-title"><i class="bi bi-image me-1"></i>Profile Photo</p>
+          <div class="d-flex align-items-center gap-4 mb-3">
+            <div id="avatarPreviewWrap">
+              {% if user.profile.photo %}
+              <img src="{{ user.profile.photo.url }}" class="avatar-preview" id="avatarPreview" alt="Current photo">
+              {% else %}
+              <div class="avatar-preview-placeholder" id="avatarPlaceholder">
+                <i class="bi bi-person-fill"></i>
+              </div>
+              <img src="" class="avatar-preview d-none" id="avatarPreview" alt="Preview">
+              {% endif %}
+            </div>
+            <div class="flex-grow-1">
+              <label class="form-label fw-semibold small mb-1">Upload new photo</label>
+              <input type="file" name="photo" id="photoInput" accept="image/*"
+                     class="form-control {% if form.photo.errors %}is-invalid{% endif %}"
+                     onchange="previewPhoto(this)">
+              {% for err in form.photo.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+              <p class="text-muted small mt-1 mb-0">JPG, PNG or GIF — max 5 MB</p>
+            </div>
+          </div>
+
+          <p class="section-title"><i class="bi bi-person me-1"></i>Personal Information</p>
+          <div class="row g-3 mb-1">
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">First Name <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                <input type="text" name="first_name"
+                       class="form-control {% if form.first_name.errors %}is-invalid{% endif %}"
+                       value="{{ form.first_name.value|default:'' }}" required>
+                {% for err in form.first_name.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Last Name <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                <input type="text" name="last_name"
+                       class="form-control {% if form.last_name.errors %}is-invalid{% endif %}"
+                       value="{{ form.last_name.value|default:'' }}" required>
+                {% for err in form.last_name.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3 mt-3">
+            <label class="form-label fw-semibold small">Email Address <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+              <input type="email" name="email"
+                     class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                     value="{{ form.email.value|default:'' }}" required>
+              {% for err in form.email.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <div class="mb-1">
+            <label class="form-label fw-semibold small">
+              Phone Number <span class="text-muted fw-normal">(optional)</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-telephone text-muted"></i></span>
+              <input type="tel" name="phone"
+                     class="form-control {% if form.phone.errors %}is-invalid{% endif %}"
+                     value="{{ form.phone.value|default:'' }}" placeholder="+1 (123) 456-7890">
+              {% for err in form.phone.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <p class="section-title"><i class="bi bi-lock me-1"></i>Change Password
+            <span class="text-muted fw-normal" style="text-transform:none;letter-spacing:0;font-size:.78rem;"> — leave blank to keep current password</span>
+          </p>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">New Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
+              <input type="password" name="new_password" id="id_new_pw"
+                     class="form-control {% if form.new_password.errors %}is-invalid{% endif %}"
+                     placeholder="Min. 8 characters"
+                     oninput="checkStrength(this.value)">
+              <button type="button" class="input-group-text" onclick="togglePw('id_new_pw','eye1')" title="Show/hide">
+                <i class="bi bi-eye" id="eye1"></i>
+              </button>
+              {% for err in form.new_password.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+            </div>
+            <div class="mt-1 px-1">
+              <div style="height:4px;background:#e9ecef;border-radius:4px;overflow:hidden;">
+                <div id="pw-bar" class="pw-strength" style="width:0;background:#dc3545;"></div>
+              </div>
+              <p id="pw-hint" class="text-muted mb-0 mt-1" style="font-size:.75rem;"></p>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold small">Confirm New Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock-fill text-muted"></i></span>
+              <input type="password" name="confirm_password" id="id_confirm_pw"
+                     class="form-control {% if form.confirm_password.errors %}is-invalid{% endif %}"
+                     placeholder="Repeat new password"
+                     oninput="checkMatch()">
+              <button type="button" class="input-group-text" onclick="togglePw('id_confirm_pw','eye2')" title="Show/hide">
+                <i class="bi bi-eye" id="eye2"></i>
+              </button>
+              {% for err in form.confirm_password.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+            </div>
+            <p id="match-hint" class="mb-0 mt-1" style="font-size:.75rem;"></p>
+          </div>
+
+          <div class="d-flex gap-3 align-items-center">
+            <button type="submit" class="btn btn-save">
+              <i class="bi bi-save me-2"></i>Save Changes
+            </button>
+            <a href="{% url 'profile' %}" class="btn btn-outline-secondary" style="border-radius:10px;padding:.65rem 1.5rem;">
+              <i class="bi bi-x me-1"></i>Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewPhoto(input) {
+  const preview = document.getElementById('avatarPreview');
+  const placeholder = document.getElementById('avatarPlaceholder');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.classList.remove('d-none');
+      if (placeholder) placeholder.classList.add('d-none');
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function togglePw(inputId, iconId) {
+  const input = document.getElementById(inputId);
+  const icon  = document.getElementById(iconId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'bi bi-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'bi bi-eye';
+  }
+}
+
+function checkStrength(pw) {
+  const bar  = document.getElementById('pw-bar');
+  const hint = document.getElementById('pw-hint');
+  if (!pw) { bar.style.width = '0'; hint.textContent = ''; checkMatch(); return; }
+  let score = 0;
+  if (pw.length >= 8)          score++;
+  if (/[A-Z]/.test(pw))        score++;
+  if (/[0-9]/.test(pw))        score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [
+    { w: '10%',  color: '#dc3545', label: 'Too short' },
+    { w: '25%',  color: '#dc3545', label: 'Weak' },
+    { w: '50%',  color: '#fd7e14', label: 'Fair' },
+    { w: '75%',  color: '#ffc107', label: 'Good' },
+    { w: '100%', color: '#198754', label: 'Strong' },
+  ];
+  const l = pw.length < 8 ? levels[0] : levels[score];
+  bar.style.width = l.w;
+  bar.style.background = l.color;
+  hint.textContent = 'Strength: ' + l.label;
+  hint.style.color = l.color;
+  checkMatch();
+}
+
+function checkMatch() {
+  const pw1  = document.getElementById('id_new_pw').value;
+  const pw2  = document.getElementById('id_confirm_pw').value;
+  const hint = document.getElementById('match-hint');
+  if (!pw1 || !pw2) { hint.textContent = ''; return; }
+  if (pw1 === pw2) {
+    hint.textContent = '✓ Passwords match';
+    hint.style.color = '#198754';
+  } else {
+    hint.textContent = '✗ Passwords do not match';
+    hint.style.color = '#dc3545';
+  }
+}
+</script>
+{% endblock %}
